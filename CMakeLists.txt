@@ -45,6 +45,7 @@ option(SLANG_RHI_BUILD_SHARED "Build shared library" OFF)
 option(SLANG_RHI_BUILD_TESTS "Build tests" ${SLANG_RHI_MASTER_PROJECT})
 option(SLANG_RHI_BUILD_TESTS_WITH_GLFW "Build tests that require GLFW" ${SLANG_RHI_MASTER_PROJECT})
 option(SLANG_RHI_BUILD_EXAMPLES "Build examples" ${SLANG_RHI_MASTER_PROJECT})
+option(SLANG_RHI_BUILD_BENCHMARKS "Build benchmarks" ${SLANG_RHI_MASTER_PROJECT})
 option(SLANG_RHI_ENABLE_COVERAGE "Enable code coverage (clang only)" OFF)
 option(SLANG_RHI_INSTALL "Install library" ON)
 
@@ -1151,6 +1152,17 @@ if(SLANG_RHI_BUILD_EXAMPLES)
     endif()
 endif()
 
+if(SLANG_RHI_BUILD_BENCHMARKS)
+    add_executable(benchmark-compile
+        benchmarks/benchmark-compile/main.cpp
+        benchmarks/benchmark-compile/synthetic-modules.cpp
+        benchmarks/benchmark-compile/thread-pool.cpp
+    )
+    target_compile_features(benchmark-compile PRIVATE cxx_std_20)
+    target_compile_definitions(benchmark-compile PRIVATE NOMINMAX)
+    target_link_libraries(benchmark-compile PRIVATE slang-rhi slang)
+    target_include_directories(benchmark-compile PRIVATE include src)
+endif()
 
 add_custom_target(slang-rhi-copy-files ALL DEPENDS ${SLANG_RHI_COPY_FILES})
 add_dependencies(slang-rhi slang-rhi-copy-files)
