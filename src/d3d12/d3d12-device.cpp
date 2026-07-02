@@ -1221,6 +1221,14 @@ Result DeviceImpl::initialize(const DeviceDesc& desc, BackendImpl* backend)
         }
     }
 
+    // Shader model 6.9 requires HitObject and MaybeReorderThread support on ray tracing devices.
+    // MaybeReorderThread is allowed to be a no-op, so this feature indicates API availability rather than
+    // guaranteeing that the implementation actually reorders threads.
+    if (hasFeature(Feature::SM_6_9) && hasFeature(Feature::RayTracing))
+    {
+        addFeature(Feature::ShaderExecutionReordering);
+    }
+
     // Initialize slang context.
     SLANG_RETURN_ON_FAIL(m_slangContext.initialize(
         desc.slang,
