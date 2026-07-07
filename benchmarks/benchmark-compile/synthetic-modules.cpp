@@ -72,7 +72,7 @@ static SyntheticModuleDesc generateMissModule(int seed)
 }
 
 // ---------------------------------------------------------------------------
-// Closesthit modules — size varies
+// Closesthit modules - size varies
 // ---------------------------------------------------------------------------
 
 /// Generate a Simple closesthit module (~20 lines).

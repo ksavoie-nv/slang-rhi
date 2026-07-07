@@ -1152,7 +1152,7 @@ if(SLANG_RHI_BUILD_EXAMPLES)
     endif()
 endif()
 
-if(SLANG_RHI_BUILD_BENCHMARKS)
+if(SLANG_RHI_BUILD_BENCHMARKS AND NOT EMSCRIPTEN)
     add_executable(benchmark-compile
         benchmarks/benchmark-compile/main.cpp
         benchmarks/benchmark-compile/synthetic-modules.cpp

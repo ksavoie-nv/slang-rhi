@@ -20,7 +20,7 @@
 using namespace rhi;
 
 // ---------------------------------------------------------------------------
-// Debug callback — prints all RHI/driver messages to stderr.
+// Debug callback - prints all RHI/driver messages to stderr.
 // ---------------------------------------------------------------------------
 
 class StderrDebugCallback : public IDebugCallback
@@ -53,7 +53,7 @@ public:
 static StderrDebugCallback g_debugCallback;
 
 // ---------------------------------------------------------------------------
-// Global configuration — set by CLI parsing.
+// Global configuration - set by CLI parsing.
 // ---------------------------------------------------------------------------
 
 struct BenchmarkConfig
@@ -61,7 +61,7 @@ struct BenchmarkConfig
     int iterations = 5;
     bool verbose = false;
 
-    // Pinning — nullopt means auto-vary.
+    // Pinning - nullopt means auto-vary.
     std::optional<DeviceType> pinnedDeviceType;
     std::optional<int> pinnedModuleCount;
     std::optional<SizeLevel> pinnedSizeLevel;
@@ -70,7 +70,7 @@ struct BenchmarkConfig
 
 static BenchmarkConfig g_config;
 
-// Global seed counter — incremented for every iteration across all configurations
+// Global seed counter - incremented for every iteration across all configurations
 // to ensure no two iterations ever share a seed (and thus module/function names).
 static int globalSeedCounter = 0;
 
@@ -106,7 +106,7 @@ static ComPtr<IShaderProgram> compileModules(IDevice* device, const std::vector<
         const auto& mod = modules[i];
         ComPtr<slang::IBlob> diagnosticsBlob;
 
-        // Use the entry point name as the module name — it already includes the
+        // Use the entry point name as the module name - it already includes the
         // per-iteration seed, so Slang's module cache won't return stale modules.
         std::string moduleName = "module_" + mod.entryPointName;
         auto srcBlob = UnownedBlob::create(mod.source.data(), mod.source.size());
@@ -173,6 +173,11 @@ static ComPtr<IShaderProgram> compileModules(IDevice* device, const std::vector<
     // compileShaders -> linkedProgram->getLayout()), hiding seconds of IR work
     // inside the pipeline creation timing.
     auto layout = composedProgram->getLayout();
+    if (!layout)
+    {
+        fprintf(stderr, "Unable to get program layout\n");
+        return nullptr;
+    }
 
     if (g_config.verbose)
     {
@@ -220,7 +225,10 @@ static ComPtr<IRayTracingPipeline> createRayTracingPipeline(
 {
     // Build hit group descriptors from closesthit modules.
     std::vector<HitGroupDesc> hitGroups;
-    std::vector<std::string> hitGroupNames; // keep strings alive
+
+    // keep strings alive
+    std::vector<std::string> hitGroupNames;
+    hitGroupNames.reserve(modules.size());
 
     for (const auto& mod : modules)
     {
@@ -299,8 +307,8 @@ struct BenchmarkRow
     int moduleCount;
     SizeLevel sizeLevel;
     double frontendMs;   // Slang frontend: parse, type-check, link/optimize IR
-    double codegenMs;    // Slang backend codegen: IR → target source (SPIR-V, CUDA, HLSL)
-    double downstreamMs; // Downstream compiler: NVRTC (CUDA→PTX), DXC (HLSL→DXIL), or N/A
+    double codegenMs;    // Slang backend codegen: IR -> target source (SPIR-V, CUDA, HLSL)
+    double downstreamMs; // Downstream compiler: NVRTC (CUDA->PTX), DXC (HLSL->DXIL), or N/A
     double driverMs;     // Driver pipeline creation: optixModuleCreate, vkCreateRTPipeline, etc.
     double totalMs;      // Wall-clock total (frontend + codegen + downstream + driver)
 };
@@ -504,7 +512,7 @@ static int runBenchmarks(IRHI* rhi)
     std::vector<BenchmarkRow> results;
     int failures = 0;
 
-    // Loop order: device → threads → modules → size
+    // Loop order: device -> threads -> modules -> size
     // The thread count loop is outside device creation so that we can call
     // rhi->initTaskPool() (which requires no live devices) for each count.
 
@@ -561,10 +569,10 @@ static int runBenchmarks(IRHI* rhi)
                 for (auto sizeLevel : sizeLevels)
                 {
                     // Each iteration uses a unique seed to defeat all caching:
-                    // - RHI level: new ShaderProgram object → compileShaders() runs fresh
-                    // - Driver level: unique entry point names → different binary code
+                    // - RHI level: new ShaderProgram object -> compileShaders() runs fresh
+                    // - Driver level: unique entry point names -> different binary code
                     std::vector<double> frontendMs;   // compileModules: parse, type-check, link/optimize IR
-                    std::vector<double> codegenMs;    // Slang backend codegen (IR → target source)
+                    std::vector<double> codegenMs;    // Slang backend codegen (IR -> target source)
                     std::vector<double> downstreamMs; // Downstream compiler (NVRTC/DXC)
                     std::vector<double> driverOnlyMs; // Driver pipeline creation
                     std::vector<double> totalMs;      // End-to-end wall clock
@@ -668,7 +676,7 @@ static int runBenchmarks(IRHI* rhi)
                         // "total" = all Slang compiler time during pipeline creation.
                         // "downstream" = time in downstream compilers (NVRTC, DXC, etc.).
                         // Slang codegen = total - downstream.
-                        double slangTotalDelta = (slangTotalAfter - slangTotalBefore) * 1000.0; // sec → ms
+                        double slangTotalDelta = (slangTotalAfter - slangTotalBefore) * 1000.0; // sec -> ms
                         double downstreamDelta = (slangDownstreamAfter - slangDownstreamBefore) * 1000.0;
                         double slangCodegenTime = slangTotalDelta - downstreamDelta;
 
@@ -729,7 +737,7 @@ static int runBenchmarks(IRHI* rhi)
                 }
             }
 
-            // Release Slang session reference before device — the session destructor
+            // Release Slang session reference before device - the session destructor
             // may depend on device-owned resources (global session, etc.).
             slangSession.setNull();
             globalSession = nullptr;
@@ -773,7 +781,7 @@ static int runBenchmarks(IRHI* rhi)
 /// Clear NVIDIA's shader disk caches under %LOCALAPPDATA%\NVIDIA on Windows.
 /// Clears DXCache (D3D12) and GLCache (Vulkan/GL).
 ///
-/// The OptiX cache is not cleared here — it is disabled at runtime via
+/// The OptiX cache is not cleared here - it is disabled at runtime via
 /// OPTIX_CACHE_MAXSIZE=0 on all platforms.
 #ifdef _WIN32
 static void clearWinDriverShaderCaches()
@@ -817,7 +825,7 @@ int main(int argc, char* argv[])
     // Disable driver-level shader disk caches to ensure cold-cache measurements.
     // OPTIX_CACHE_MAXSIZE=0 disables the OptiX shader cache on all platforms.
     //
-    // On Windows, __GL_SHADER_DISK_CACHE is not supported — there is no env var
+    // On Windows, __GL_SHADER_DISK_CACHE is not supported - there is no env var
     // to control NVIDIA's DXCache/GLCache. We must manually delete the cached
     // files from %LOCALAPPDATA%\NVIDIA\{DXCache,GLCache} instead.
     //
