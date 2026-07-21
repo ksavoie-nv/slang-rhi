@@ -850,7 +850,7 @@ public:
                 optixProgramGroupDesc.kind = OPTIX_PROGRAM_GROUP_KIND_CALLABLES;
                 // TODO: support continuation callables
                 optixProgramGroupDesc.callables.moduleDC = optixModules[i];
-                entryFunctionName = "__callable__" + module.entryPointName;
+                entryFunctionName = "__direct_callable__" + module.entryPointName;
                 optixProgramGroupDesc.callables.entryFunctionNameDC = entryFunctionName.data();
                 break;
             default:

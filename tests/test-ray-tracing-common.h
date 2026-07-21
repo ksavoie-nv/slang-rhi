@@ -1044,7 +1044,8 @@ struct RayTracingTestPipeline
         const std::vector<const char*>& missNames,
         RayTracingPipelineFlags flags = RayTracingPipelineFlags::None,
         const ShaderRecordOverwrite* hitGroupSbtData = nullptr,
-        const std::vector<const char*>& callableNames = std::vector<const char*>()
+        const std::vector<const char*>& callableNames = std::vector<const char*>(),
+        const ShaderRecordOverwrite* callableSbtData = nullptr
     )
     {
         ComPtr<IShaderProgram> rayTracingProgram;
@@ -1122,8 +1123,11 @@ struct RayTracingTestPipeline
         shaderTableDesc.rayGenShaderEntryPointNames = raygenNames.data();
         shaderTableDesc.missShaderCount = missNames.size();
         shaderTableDesc.missShaderEntryPointNames = missNames.data();
+
+        // Forward the callable entry points and optional per-record data into the shared shader-table builder.
         shaderTableDesc.callableShaderCount = callableNames.size();
         shaderTableDesc.callableShaderEntryPointNames = callableNames.data();
+        shaderTableDesc.callableShaderRecordOverwrites = callableSbtData;
         REQUIRE_CALL(device->createShaderTable(shaderTableDesc, shaderTable.writeRef()));
     }
 };
